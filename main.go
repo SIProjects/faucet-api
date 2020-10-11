@@ -1,7 +1,17 @@
 package main
 
-import "fmt"
+import (
+	"log"
+
+	"github.com/SIProjects/faucet-api/app"
+)
 
 func main() {
-	fmt.Println("Hello, world!")
+	a, err := app.New()
+
+	if err != nil {
+		log.Fatalln("Error starting app:", err)
+	}
+
+	a.Start()
 }
