@@ -6,6 +6,7 @@ import (
 
 	"github.com/SIProjects/faucet-api/app"
 	"github.com/SIProjects/faucet-api/database"
+	"github.com/SIProjects/faucet-api/node"
 
 	_ "github.com/joho/godotenv/autoload"
 )
@@ -17,7 +18,13 @@ func loadApp() (*app.App, error) {
 		return nil, err
 	}
 
-	a, err := app.New(db)
+	node, err := node.New()
+
+	if err != nil {
+		return nil, err
+	}
+
+	a, err := app.New(db, node)
 
 	if err != nil {
 		return nil, err
