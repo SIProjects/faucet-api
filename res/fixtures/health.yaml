@@ -1,0 +1,7 @@
+name: Health
+description: Checking the health endpoint
+request:
+  path: /
+  method: GET
+response:
+  status: 200

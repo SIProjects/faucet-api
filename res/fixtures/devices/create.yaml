@@ -1,0 +1,20 @@
+name: Create Device
+description: Creating a new device model
+request:
+  path: /v1/devices
+  method: POST
+  headers:
+    - key: Content-Type
+      value: application/json
+  body: >-
+    {
+      "model":"GM19",
+      "platform": "android",
+      "os_version": "10",
+      "local_id": "localdevice123"
+    }
+response:
+  status: 201
+database:
+  - query: SELECT * FROM device
+    rows: 1

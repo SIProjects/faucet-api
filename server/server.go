@@ -22,6 +22,7 @@ func New(db database.Database, n *node.Node) (*Server, error) {
 	r := mux.NewRouter()
 	s := Server{
 		System: system.New(db, n, r),
+		Router: r,
 	}
 	s.SetupRoutes()
 	return &s, nil

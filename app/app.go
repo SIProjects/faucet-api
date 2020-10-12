@@ -11,12 +11,13 @@ import (
 )
 
 type App struct {
-	DB     database.Database
+	DB     *database.PGDatabase
 	Node   *node.Node
 	Server *server.Server
+	done   chan struct{}
 }
 
-func New(db database.Database, n *node.Node) (*App, error) {
+func New(db *database.PGDatabase, n *node.Node) (*App, error) {
 	s, err := server.New(db, n)
 	if err != nil {
 		return nil, err
@@ -30,6 +31,7 @@ func New(db database.Database, n *node.Node) (*App, error) {
 }
 
 func (a *App) Start() {
+	a.done = make(chan struct{})
 	done := make(chan struct{})
 
 	go a.Server.Start(done)
@@ -38,9 +40,20 @@ func (a *App) Start() {
 	signal.Notify(c, os.Interrupt)
 
 	// Block until we receive interrupt signal.
-	<-c
+	select {
+	case <-c:
+		break
+	case <-a.done:
+		break
+	}
 
 	done <- struct{}{}
 
 	log.Println("shutting down")
+}
+
+func (a *App) Close() {
+	log.Println("Closing app")
+	a.DB.Close()
+	log.Println("App closed")
 }
