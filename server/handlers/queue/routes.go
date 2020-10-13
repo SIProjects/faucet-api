@@ -7,7 +7,7 @@ import (
 
 func SetupRoutes(s *system.System) {
 	s.Router.HandleFunc(
-		"/v1/payouts", AddToQueue(s),
+		"/v1/queue", AddToQueue(s),
 	).Methods("POST").HeadersRegexp(
 		"Content-Type", constants.APPLICATION_JSON_REGEX,
 	)

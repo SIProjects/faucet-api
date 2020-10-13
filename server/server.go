@@ -7,9 +7,10 @@ import (
 	"time"
 
 	"github.com/SIProjects/faucet-api/cache"
+	"github.com/SIProjects/faucet-api/chain"
 	"github.com/SIProjects/faucet-api/database"
-	"github.com/SIProjects/faucet-api/node"
 	"github.com/SIProjects/faucet-api/server/handlers/health"
+	"github.com/SIProjects/faucet-api/server/handlers/queue"
 	"github.com/SIProjects/faucet-api/server/system"
 	"github.com/gorilla/mux"
 )
@@ -19,10 +20,10 @@ type Server struct {
 	Router *mux.Router
 }
 
-func New(db database.Database, c cache.Cache, n node.Node) (*Server, error) {
+func New(db database.Database, c cache.Cache, ch *chain.Chain) (*Server, error) {
 	r := mux.NewRouter()
 	s := Server{
-		System: system.New(db, c, n, r),
+		System: system.New(db, c, ch, r),
 		Router: r,
 	}
 	s.SetupRoutes()
@@ -31,6 +32,7 @@ func New(db database.Database, c cache.Cache, n node.Node) (*Server, error) {
 
 func (s *Server) SetupRoutes() {
 	health.SetupRoutes(s.System)
+	queue.SetupRoutes(s.System)
 }
 
 func (s *Server) Start(done chan struct{}) {

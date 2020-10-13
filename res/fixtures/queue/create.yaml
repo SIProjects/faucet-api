@@ -1,0 +1,17 @@
+name: Add to queue
+description: Adding an address to the queue
+request:
+  path: /v1/queue
+  method: POST
+  headers:
+    - key: Content-Type
+      value: application/json
+  body: >-
+    {
+      "address": "TAhMsSxfyQAxGGMUTb7YyRk2uFruyZSZ6a"
+    }
+response:
+  status: 201
+cache:
+  pending:
+    - TAhMsSxfyQAxGGMUTb7YyRk2uFruyZSZ6a

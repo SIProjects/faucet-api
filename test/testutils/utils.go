@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/SIProjects/faucet-api/app"
+	"github.com/SIProjects/faucet-api/chain"
 	"github.com/SIProjects/faucet-api/database"
 	"github.com/jackc/pgx/v4"
 )
@@ -30,6 +31,7 @@ type SandboxContext struct {
 	App           *app.App
 	Name          string
 	ConnectionURL string
+	Cache         *MockCache
 }
 
 func getenv(key, fallback string) string {
@@ -106,7 +108,13 @@ func NewSandbox() (*SandboxContext, error) {
 		return nil, err
 	}
 
-	a, err := app.New(db, NewMockCache(), nil)
+	cache := NewMockCache()
+
+	n := NewMockNode()
+
+	ch := chain.New(n, chain.Testnet)
+
+	a, err := app.New(db, cache, ch)
 
 	if err != nil {
 		return nil, err
@@ -116,6 +124,7 @@ func NewSandbox() (*SandboxContext, error) {
 		App:           a,
 		Name:          name,
 		ConnectionURL: dbUrl,
+		Cache:         cache,
 	}
 
 	return &sb, nil

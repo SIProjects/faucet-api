@@ -6,6 +6,7 @@ import (
 
 	"github.com/SIProjects/faucet-api/app"
 	"github.com/SIProjects/faucet-api/cache"
+	"github.com/SIProjects/faucet-api/chain"
 	"github.com/SIProjects/faucet-api/database"
 	"github.com/SIProjects/faucet-api/node"
 
@@ -29,14 +30,15 @@ func loadApp() (*app.App, error) {
 		os.Getenv("RPC_URL"),
 		os.Getenv("RPC_USER"),
 		os.Getenv("RPC_PASSWORD"),
-		node.Testnet,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	a, err := app.New(db, c, node)
+	ch := chain.New(node, chain.Testnet)
+
+	a, err := app.New(db, c, ch)
 
 	if err != nil {
 		return nil, err

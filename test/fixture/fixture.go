@@ -17,7 +17,8 @@ type FixtureResponse struct {
 }
 
 type CacheFixtures struct {
-	ExistsFixtures []AddressExistsFixture `yaml:address-exists`
+	ExistsFixtures []AddressExistsFixture `yaml:"address-exists"`
+	PendingResults []string               `yaml:"pending"`
 }
 
 type AddressExistsFixture struct {

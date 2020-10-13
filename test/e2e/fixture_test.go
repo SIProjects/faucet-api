@@ -31,6 +31,7 @@ func TestFixtures(t *testing.T) {
 
 	fixtures := [...]string{
 		"health.yaml",
+		"queue/create.yaml",
 	}
 
 	for _, name := range fixtures {
@@ -61,6 +62,11 @@ func TestFixtures(t *testing.T) {
 				fx.Response.Status,
 			),
 		)
+
+		for _, pending := range fx.Cache.PendingResults {
+			_, ok := sb.Cache.Pending[pending]
+			asserts.True(ok)
+		}
 
 		for _, dbCheck := range fx.DatabaseChecks {
 			rs, err := sb.App.DB.Conn.Query(context.Background(), dbCheck.Query)

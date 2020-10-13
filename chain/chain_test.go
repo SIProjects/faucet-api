@@ -1,8 +1,10 @@
-package node
+package chain_test
 
 import (
 	"testing"
 
+	"github.com/SIProjects/faucet-api/chain"
+	"github.com/SIProjects/faucet-api/node"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -14,9 +16,10 @@ func TestAddressDecoding(t *testing.T) {
 	}
 
 	for _, address := range addresses {
-		n, err := New("", "", "", Testnet)
+		n, err := node.New("", "", "")
+		ch := chain.New(n, chain.Testnet)
 
-		_, err = n.DecodeAddress(address)
+		_, err = ch.DecodeAddress(address)
 
 		asserts.NoError(err)
 	}
