@@ -74,7 +74,6 @@ func TestFixtures(t *testing.T) {
 
 		if fx.Response.Body != nil {
 			body, err := ioutil.ReadAll(rr.Body)
-			fmt.Println(string(body))
 			asserts.NoError(err)
 			asserts.Equal(
 				*fx.Response.Body, string(body),

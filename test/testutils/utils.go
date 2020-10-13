@@ -114,7 +114,7 @@ func NewSandbox() (*SandboxContext, error) {
 
 	ch := chain.New(n, chain.Testnet)
 
-	a, err := app.New(db, cache, ch)
+	a, err := app.New(db, cache, ch, NewMockScheduler())
 
 	if err != nil {
 		return nil, err

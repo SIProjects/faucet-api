@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/btcsuite/btcd v0.21.0-beta
 	github.com/btcsuite/btcutil v1.0.2
+	github.com/docker/distribution v2.7.1+incompatible
 	github.com/go-redis/redis/v8 v8.3.0
 	github.com/golang-migrate/migrate v3.5.4+incompatible // indirect
 	github.com/golang-migrate/migrate/v4 v4.13.0

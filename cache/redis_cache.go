@@ -2,8 +2,10 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/SIProjects/faucet-api/chain"
 	"github.com/btcsuite/btcutil"
 	"github.com/go-redis/redis/v8"
 )
@@ -11,9 +13,10 @@ import (
 type RedisCache struct {
 	Name   string
 	Client *redis.Client
+	Chain  *chain.Chain
 }
 
-func New(url, password, dbname string) (*RedisCache, error) {
+func New(url, password, dbname string, ch *chain.Chain) (*RedisCache, error) {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     url,
 		Password: password,
@@ -32,6 +35,7 @@ func New(url, password, dbname string) (*RedisCache, error) {
 	c := RedisCache{
 		Client: rdb,
 		Name:   dbname,
+		Chain:  ch,
 	}
 
 	return &c, nil
@@ -52,7 +56,7 @@ func (c *RedisCache) AddressKey(addr btcutil.Address) string {
 func (c *RedisCache) CanAddAddress(addr btcutil.Address) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
-	pending, err := c.Client.HExists(ctx, c.Key("pending"), addr.String()).Result()
+	pending, err := c.Client.SIsMember(ctx, c.Key("pending"), addr.String()).Result()
 
 	if err != nil {
 		return false, err
@@ -68,21 +72,90 @@ func (c *RedisCache) CanAddAddress(addr btcutil.Address) (bool, error) {
 		return false, err
 	}
 
-	return paid != 0, nil
+	return paid == 0, nil
 }
 
 func (c *RedisCache) AddAddressToQueue(addr btcutil.Address) error {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
-	_, err := c.Client.HSet(ctx, c.Key("pending"), addr.String()).Result()
 
-	if err != nil {
-		return err
-	}
+	_, err := c.Client.TxPipelined(ctx, func(p redis.Pipeliner) error {
+		_, err := p.SAdd(ctx, c.Key("pending"), addr.String()).Result()
 
-	return nil
+		if err != nil {
+			return err
+		}
+
+		_, err = p.RPush(ctx, c.Key("pending:queue"), addr.String()).Result()
+
+		if err != nil {
+			return err
+		}
+
+		_, err = p.Set(ctx, c.AddressKey(addr), 1, time.Hour*24).Result()
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	return err
 }
 
 func (c *RedisCache) AddAddressPayout() error {
 	return nil
+}
+
+func (c *RedisCache) GetNextAddresses(num int) ([]btcutil.Address, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	res := make([]btcutil.Address, 0)
+	p := c.Client
+	//_, err = c.Client.TxPipelined(ctx, func(p redis.Pipeliner) error {
+	for i := 0; i < num; i++ {
+		exists, err := c.Client.Exists(ctx, c.Key("pending:queue")).Result()
+
+		if err != nil {
+			return res, err
+		}
+
+		if exists == 0 {
+			return res, nil
+		}
+
+		addrStr, err := p.LPop(ctx, c.Key("pending:queue")).Result()
+		fmt.Println("A", err, addrStr)
+
+		if err != nil {
+			return []btcutil.Address{}, err
+		}
+
+		if addrStr == "" {
+			continue
+		}
+
+		addr, err := c.Chain.DecodeAddress(addrStr)
+
+		if err != nil {
+			//return err
+			return []btcutil.Address{}, err
+		}
+
+		_, err = p.SRem(ctx, c.Key("pending"), addrStr).Result()
+
+		if err != nil {
+			//return err
+			return []btcutil.Address{}, err
+		}
+
+		res = append(res, addr)
+	}
+
+	//return nil
+	//})
+
+	return res, nil
 }

@@ -22,6 +22,10 @@ func (c *MockCache) AddAddressPayout() error {
 func (c *MockCache) Close() {
 }
 
+func (c *MockCache) GetNextAddresses(num int) ([]btcutil.Address, error) {
+	return []btcutil.Address{}, nil
+}
+
 func NewMockCache() *MockCache {
 	return &MockCache{
 		Pending: make(map[string]struct{}, 0),
@@ -37,4 +41,14 @@ func (n *MockNode) PayToAddress(address btcutil.Address, amount btcutil.Amount) 
 
 func NewMockNode() *MockNode {
 	return &MockNode{}
+}
+
+type MockScheduler struct {
+}
+
+func (n *MockScheduler) Start(done chan struct{}) {
+}
+
+func NewMockScheduler() *MockScheduler {
+	return &MockScheduler{}
 }
