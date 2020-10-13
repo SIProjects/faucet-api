@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/SIProjects/faucet-api/cache"
 	"github.com/SIProjects/faucet-api/database"
 	"github.com/SIProjects/faucet-api/node"
 	"github.com/SIProjects/faucet-api/server"
@@ -12,18 +13,20 @@ import (
 
 type App struct {
 	DB     *database.PGDatabase
-	Node   *node.Node
+	Cache  cache.Cache
+	Node   node.Node
 	Server *server.Server
 	done   chan struct{}
 }
 
-func New(db *database.PGDatabase, n *node.Node) (*App, error) {
-	s, err := server.New(db, n)
+func New(db *database.PGDatabase, c cache.Cache, n node.Node) (*App, error) {
+	s, err := server.New(db, c, n)
 	if err != nil {
 		return nil, err
 	}
 	a := App{
 		DB:     db,
+		Cache:  c,
 		Node:   n,
 		Server: s,
 	}
@@ -55,5 +58,6 @@ func (a *App) Start() {
 func (a *App) Close() {
 	log.Println("Closing app")
 	a.DB.Close()
+	a.Cache.Close()
 	log.Println("App closed")
 }

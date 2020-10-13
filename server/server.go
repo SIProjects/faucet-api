@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/SIProjects/faucet-api/cache"
 	"github.com/SIProjects/faucet-api/database"
 	"github.com/SIProjects/faucet-api/node"
 	"github.com/SIProjects/faucet-api/server/handlers/health"
@@ -18,10 +19,10 @@ type Server struct {
 	Router *mux.Router
 }
 
-func New(db database.Database, n *node.Node) (*Server, error) {
+func New(db database.Database, c cache.Cache, n node.Node) (*Server, error) {
 	r := mux.NewRouter()
 	s := Server{
-		System: system.New(db, n, r),
+		System: system.New(db, c, n, r),
 		Router: r,
 	}
 	s.SetupRoutes()
@@ -58,5 +59,4 @@ func (s *Server) Start(done chan struct{}) {
 		srv.Shutdown(ctx)
 	}()
 	<-ctx.Done()
-
 }

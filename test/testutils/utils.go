@@ -106,7 +106,7 @@ func NewSandbox() (*SandboxContext, error) {
 		return nil, err
 	}
 
-	a, err := app.New(db, nil)
+	a, err := app.New(db, NewMockCache(), nil)
 
 	if err != nil {
 		return nil, err

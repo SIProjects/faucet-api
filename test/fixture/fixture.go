@@ -16,6 +16,16 @@ type FixtureResponse struct {
 	Status int `yaml:"status"`
 }
 
+type CacheFixtures struct {
+	ExistsFixtures []AddressExistsFixture `yaml:address-exists`
+}
+
+type AddressExistsFixture struct {
+	Address string `yaml:"address"`
+	Exists  bool   `yaml:"exists"`
+	Error   bool   `yaml:"error"`
+}
+
 type DatabaseCheck struct {
 	Query string `yaml:"query"`
 	Rows  int    `yaml:"rows"`
@@ -27,4 +37,5 @@ type Fixture struct {
 	Request        FixtureRequest  `yaml:"request"`
 	Response       FixtureResponse `yaml:"response"`
 	DatabaseChecks []DatabaseCheck `yaml:"database"`
+	Cache          CacheFixtures   `yaml:"cache"`
 }
