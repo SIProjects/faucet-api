@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/SIProjects/faucet-api/test/fixture"
 	testutils "github.com/SIProjects/faucet-api/test/testutils"
@@ -31,6 +32,7 @@ func TestFixtures(t *testing.T) {
 
 	fixtures := [...]string{
 		"health.yaml",
+		"payouts/view.yaml",
 		"queue/create.yaml",
 	}
 
@@ -40,6 +42,13 @@ func TestFixtures(t *testing.T) {
 		sb, err := testutils.NewSandbox()
 		asserts.NoError(err)
 		defer sb.Close()
+
+		for _, query := range fx.Setup.DB {
+			ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+			defer cancel()
+			err = sb.App.DB.Exec(ctx, query)
+			asserts.NoError(err)
+		}
 
 		body := strings.NewReader(fx.Request.Body)
 
@@ -62,6 +71,18 @@ func TestFixtures(t *testing.T) {
 				fx.Response.Status,
 			),
 		)
+
+		if fx.Response.Body != nil {
+			body, err := ioutil.ReadAll(rr.Body)
+			fmt.Println(string(body))
+			asserts.NoError(err)
+			asserts.Equal(
+				*fx.Response.Body, string(body),
+				fmt.Sprintf(
+					"Fixture %s should have the correct body", name,
+				),
+			)
+		}
 
 		for _, pending := range fx.Cache.PendingResults {
 			_, ok := sb.Cache.Pending[pending]

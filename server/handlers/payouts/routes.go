@@ -6,6 +6,6 @@ import (
 
 func SetupRoutes(s *system.System) {
 	s.Router.HandleFunc(
-		"/v1/payouts", ReadPayouts(s),
+		"/v1/payouts/recent", ReadPayouts(s),
 	).Methods("GET")
 }

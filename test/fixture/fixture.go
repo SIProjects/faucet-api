@@ -13,7 +13,12 @@ type FixtureRequest struct {
 }
 
 type FixtureResponse struct {
-	Status int `yaml:"status"`
+	Status int     `yaml:"status"`
+	Body   *string `yaml:"body"`
+}
+
+type SetupFixtures struct {
+	DB []string `yaml:"db"`
 }
 
 type CacheFixtures struct {
@@ -39,4 +44,5 @@ type Fixture struct {
 	Response       FixtureResponse `yaml:"response"`
 	DatabaseChecks []DatabaseCheck `yaml:"database"`
 	Cache          CacheFixtures   `yaml:"cache"`
+	Setup          SetupFixtures   `yaml:"setup"`
 }

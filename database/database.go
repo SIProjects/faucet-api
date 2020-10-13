@@ -15,10 +15,19 @@ type QueryRowable interface {
 	QueryRow(
 		ctx context.Context, sql string, args ...interface{},
 	) interface{ Scannable }
+	Query(
+		ctx context.Context, sql string, args ...interface{},
+	) (interface{ Iterable }, error)
 }
 
 type Scannable interface {
 	Scan(dest ...interface{}) error
+}
+
+type Iterable interface {
+	Scannable
+	Next() bool
+	Err() error
 }
 
 type Database interface {
@@ -69,6 +78,13 @@ func (d *PGDatabase) QueryRow(
 ) interface{ Scannable } {
 	row := d.Conn.QueryRow(ctx, sql, args...)
 	return row
+}
+
+func (db *PGDatabase) Query(
+	ctx context.Context, sql string, args ...interface{},
+) (interface{ Iterable }, error) {
+	rows, err := db.Conn.Query(ctx, sql, args...)
+	return rows, err
 }
 
 func (d *PGDatabase) Close() {

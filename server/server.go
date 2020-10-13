@@ -10,6 +10,7 @@ import (
 	"github.com/SIProjects/faucet-api/chain"
 	"github.com/SIProjects/faucet-api/database"
 	"github.com/SIProjects/faucet-api/server/handlers/health"
+	"github.com/SIProjects/faucet-api/server/handlers/payouts"
 	"github.com/SIProjects/faucet-api/server/handlers/queue"
 	"github.com/SIProjects/faucet-api/server/system"
 	"github.com/gorilla/mux"
@@ -33,6 +34,7 @@ func New(db database.Database, c cache.Cache, ch *chain.Chain) (*Server, error) 
 func (s *Server) SetupRoutes() {
 	health.SetupRoutes(s.System)
 	queue.SetupRoutes(s.System)
+	payouts.SetupRoutes(s.System)
 }
 
 func (s *Server) Start(done chan struct{}) {

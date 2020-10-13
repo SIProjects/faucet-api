@@ -1,7 +1,7 @@
 create table payout (
   txid varchar primary key,
   address varchar not null,
-  amount varchar not null,
+  amount int not null,
   is_mined boolean not null,
   inserted_at timestamp,
   updated_at timestamp
