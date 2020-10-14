@@ -41,12 +41,15 @@ func Insert(payout model.Payout, db database.Database) error {
 	defer cancel()
 
 	query := `
-	INSERT INTO payload (
+	INSERT INTO payout (
 		txid, address, amount, is_mined, inserted_at, updated_at
-	) FROM payout ORDER BY updated_at DESC LIMIT(50)
+	) VALUES ($1, $2, $3, $4, $5, $6)
 	`
 
-	err := db.Exec(ctx, query)
+	err := db.Exec(
+		ctx, query, payout.TxID, payout.Address, payout.Amount, payout.IsMined,
+		payout.InsertedAt, payout.UpdatedAt,
+	)
 
 	return err
 }

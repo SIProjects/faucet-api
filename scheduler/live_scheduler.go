@@ -84,13 +84,20 @@ func (s *LiveScheduler) CreatePayouts() {
 
 	fmt.Println("Paid out:", txid)
 
+	now := time.Now()
 	for address, amount := range amounts {
 		p := model.Payout{
-			Amount:  amount.ToUnit(btcutil.AmountBTC),
-			Address: address.String(),
+			Amount:     amount.ToUnit(btcutil.AmountBTC),
+			Address:    address.String(),
+			TxID:       txid,
+			InsertedAt: now,
+			UpdatedAt:  now,
 		}
 
-		payout.Insert(p, s.DB)
+		err := payout.Insert(p, s.DB)
+		if err != nil {
+			fmt.Println("Error inserting:", err.Error())
+		}
 	}
 }
 
