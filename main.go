@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/SIProjects/faucet-api/app"
@@ -14,6 +15,16 @@ import (
 
 	_ "github.com/joho/godotenv/autoload"
 )
+
+func loadIntVar(name string, defaultValue int) int {
+	val, err := strconv.Atoi(os.Getenv(name))
+
+	if err != nil {
+		return defaultValue
+	}
+
+	return val
+}
 
 func loadApp() (*app.App, error) {
 	logger := log.New(
@@ -51,7 +62,12 @@ func loadApp() (*app.App, error) {
 		return nil, err
 	}
 
-	sch, err := scheduler.New(time.Second*5, db, c, ch, logger)
+	minPayout := loadIntVar("MIN_PAYOUT", 10)
+	maxPayout := loadIntVar("MAX_PAYOUT", 100)
+
+	sch, err := scheduler.New(
+		time.Second*5, db, c, ch, logger, minPayout, maxPayout,
+	)
 
 	a, err := app.New(db, c, ch, sch, logger)
 

@@ -16,11 +16,13 @@ import (
 )
 
 type LiveScheduler struct {
-	Interval time.Duration
-	Chain    *chain.Chain
-	Cache    cache.Cache
-	DB       database.Database
-	Logger   *log.Logger
+	Interval  time.Duration
+	Chain     *chain.Chain
+	Cache     cache.Cache
+	DB        database.Database
+	Logger    *log.Logger
+	MinPayout int
+	MaxPayout int
 }
 
 func New(
@@ -29,13 +31,23 @@ func New(
 	c cache.Cache,
 	ch *chain.Chain,
 	l *log.Logger,
+	min int,
+	max int,
 ) (*LiveScheduler, error) {
+
+	l.Println(
+		"Scheduler set up to payout between", min, "-", max, "every",
+		interval.String(),
+	)
+
 	return &LiveScheduler{
-		Interval: interval,
-		Chain:    ch,
-		DB:       db,
-		Cache:    c,
-		Logger:   l,
+		Interval:  interval,
+		Chain:     ch,
+		DB:        db,
+		Cache:     c,
+		Logger:    l,
+		MinPayout: min,
+		MaxPayout: max,
 	}, nil
 }
 
@@ -68,7 +80,7 @@ func (s *LiveScheduler) CreatePayouts() {
 	payments := make([]node.Payment, 0)
 
 	for _, x := range addresses {
-		amount, err := randomAmount()
+		amount, err := s.randomAmount()
 		if err != nil {
 			s.Logger.Println("Random Amount Error:", err.Error())
 			return
@@ -109,8 +121,8 @@ func (s *LiveScheduler) CreatePayouts() {
 
 }
 
-func randomAmount() (btcutil.Amount, error) {
-	val := rand.Int63n(100-10) + 10
+func (s *LiveScheduler) randomAmount() (btcutil.Amount, error) {
+	val := rand.Intn(s.MaxPayout-s.MinPayout) + s.MinPayout
 	return btcutil.NewAmount(float64(val))
 }
 
