@@ -20,6 +20,7 @@ type LiveScheduler struct {
 	Chain    *chain.Chain
 	Cache    cache.Cache
 	DB       database.Database
+	Logger   *log.Logger
 }
 
 func New(
@@ -27,12 +28,14 @@ func New(
 	db database.Database,
 	c cache.Cache,
 	ch *chain.Chain,
+	l *log.Logger,
 ) (*LiveScheduler, error) {
 	return &LiveScheduler{
 		Interval: interval,
 		Chain:    ch,
 		DB:       db,
 		Cache:    c,
+		Logger:   l,
 	}, nil
 }
 
@@ -45,7 +48,8 @@ func (s *LiveScheduler) Start(done chan struct{}) {
 		case <-done:
 			return
 		case <-timer.C:
-			s.CreatePayouts()
+			go s.CreatePayouts()
+			go s.CheckMined()
 		}
 	}
 }
@@ -53,7 +57,7 @@ func (s *LiveScheduler) Start(done chan struct{}) {
 func (s *LiveScheduler) CreatePayouts() {
 	addresses, err := s.Cache.GetNextAddresses(20)
 	if err != nil {
-		log.Println("Obtain Cache Error:", err.Error())
+		s.Logger.Println("Obtain Cache Error:", err.Error())
 		return
 	}
 
@@ -66,7 +70,7 @@ func (s *LiveScheduler) CreatePayouts() {
 	for _, x := range addresses {
 		amount, err := randomAmount()
 		if err != nil {
-			log.Println("Random Amount Error:", err.Error())
+			s.Logger.Println("Random Amount Error:", err.Error())
 			return
 		}
 		payments = append(payments, node.Payment{
@@ -82,8 +86,6 @@ func (s *LiveScheduler) CreatePayouts() {
 		return
 	}
 
-	fmt.Println("Paid out:", txid)
-
 	now := time.Now()
 	for address, amount := range amounts {
 		p := model.Payout{
@@ -97,11 +99,49 @@ func (s *LiveScheduler) CreatePayouts() {
 		err := payout.Insert(p, s.DB)
 		if err != nil {
 			fmt.Println("Error inserting:", err.Error())
+			continue
 		}
+
+		s.Logger.Println("Paying out", p.Amount, "to", p.Address)
 	}
+
+	s.Logger.Println("Paid out:", txid)
+
 }
 
 func randomAmount() (btcutil.Amount, error) {
 	val := rand.Int63n(100-10) + 10
 	return btcutil.NewAmount(float64(val))
+}
+
+func (s *LiveScheduler) CheckMined() {
+	now := time.Now()
+	txids, err := payout.UnminedTxIDs(s.DB)
+
+	if err != nil {
+		s.Logger.Println("Error:", err.Error())
+		return
+	}
+
+	for _, txid := range txids {
+		txn, err := s.Chain.Node.GetTransaction(txid)
+
+		if err != nil {
+			s.Logger.Println("Error:", err.Error())
+			continue
+		}
+
+		if txn.Confirmations == 0 {
+			continue
+		}
+
+		err = payout.SetMined(txid, now, s.DB)
+
+		if err != nil {
+			s.Logger.Println("Error:", err.Error())
+			continue
+		}
+
+		s.Logger.Println("Setting mined", txid)
+	}
 }

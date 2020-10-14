@@ -2,7 +2,6 @@ package cache
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/SIProjects/faucet-api/chain"
@@ -114,7 +113,7 @@ func (c *RedisCache) GetNextAddresses(num int) ([]btcutil.Address, error) {
 
 	res := make([]btcutil.Address, 0)
 	p := c.Client
-	//_, err = c.Client.TxPipelined(ctx, func(p redis.Pipeliner) error {
+
 	for i := 0; i < num; i++ {
 		exists, err := c.Client.Exists(ctx, c.Key("pending:queue")).Result()
 
@@ -127,7 +126,6 @@ func (c *RedisCache) GetNextAddresses(num int) ([]btcutil.Address, error) {
 		}
 
 		addrStr, err := p.LPop(ctx, c.Key("pending:queue")).Result()
-		fmt.Println("A", err, addrStr)
 
 		if err != nil {
 			return []btcutil.Address{}, err
@@ -140,22 +138,17 @@ func (c *RedisCache) GetNextAddresses(num int) ([]btcutil.Address, error) {
 		addr, err := c.Chain.DecodeAddress(addrStr)
 
 		if err != nil {
-			//return err
 			return []btcutil.Address{}, err
 		}
 
 		_, err = p.SRem(ctx, c.Key("pending"), addrStr).Result()
 
 		if err != nil {
-			//return err
 			return []btcutil.Address{}, err
 		}
 
 		res = append(res, addr)
 	}
-
-	//return nil
-	//})
 
 	return res, nil
 }

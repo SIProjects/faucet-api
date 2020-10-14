@@ -14,7 +14,7 @@ func Recent(db database.Database) (res []model.Payout, err error) {
 
 	query := `
 	SELECT txid, address, amount, is_mined, inserted_at, updated_at
-	FROM payout ORDER BY updated_at DESC LIMIT(50)
+	FROM payout ORDER BY inserted_at DESC, address LIMIT(50)
 	`
 	rows, err := db.Query(ctx, query)
 
@@ -52,4 +52,37 @@ func Insert(payout model.Payout, db database.Database) error {
 	)
 
 	return err
+}
+
+func UnminedTxIDs(db database.Database) ([]string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	query := "SELECT DISTINCT txid FROM payout WHERE is_mined = false"
+
+	rows, err := db.Query(ctx, query)
+	txids := make([]string, 0)
+
+	if err != nil {
+		return txids, err
+	}
+
+	for rows.Next() {
+		var txid string
+		rows.Scan(&txid)
+		txids = append(txids, txid)
+	}
+
+	return txids, nil
+}
+
+func SetMined(txid string, now time.Time, db database.Database) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	query := `
+	UPDATE payout SET is_mined = true, updated_at = $1 WHERE txid = $2
+	`
+
+	return db.Exec(ctx, query, now, txid)
 }

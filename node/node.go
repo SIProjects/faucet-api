@@ -1,12 +1,15 @@
 package node
 
 import (
+	"github.com/btcsuite/btcd/btcjson"
+	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/rpcclient"
 	"github.com/btcsuite/btcutil"
 )
 
 type Node interface {
 	PayToAddresses(xs []Payment) (string, map[btcutil.Address]btcutil.Amount, error)
+	GetTransaction(txid string) (*btcjson.GetTransactionResult, error)
 }
 
 type RPCNode struct {
@@ -60,4 +63,16 @@ func (n *RPCNode) PayToAddresses(
 	}
 
 	return hash.String(), amounts, nil
+}
+
+func (n *RPCNode) GetTransaction(
+	txid string,
+) (*btcjson.GetTransactionResult, error) {
+	hash, err := chainhash.NewHashFromStr(txid)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return n.Client.GetTransaction(hash)
 }

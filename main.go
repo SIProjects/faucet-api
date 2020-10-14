@@ -16,6 +16,12 @@ import (
 )
 
 func loadApp() (*app.App, error) {
+	logger := log.New(
+		os.Stdout,
+		"faucet-api: ",
+		log.Ldate|log.Ltime|log.LUTC|log.Lmicroseconds|log.Lshortfile,
+	)
+
 	db, err := database.New(os.Getenv("DATABASE_URL"))
 
 	if err != nil {
@@ -45,9 +51,9 @@ func loadApp() (*app.App, error) {
 		return nil, err
 	}
 
-	sch, err := scheduler.New(time.Second*5, db, c, ch)
+	sch, err := scheduler.New(time.Second*5, db, c, ch, logger)
 
-	a, err := app.New(db, c, ch, sch)
+	a, err := app.New(db, c, ch, sch, logger)
 
 	if err != nil {
 		return nil, err

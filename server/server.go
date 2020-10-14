@@ -19,14 +19,19 @@ import (
 type Server struct {
 	System *system.System
 	Router *mux.Router
+	Logger *log.Logger
 }
 
-func New(db database.Database, c cache.Cache, ch *chain.Chain) (*Server, error) {
+func New(
+	db database.Database, c cache.Cache, ch *chain.Chain, l *log.Logger,
+) (*Server, error) {
 	r := mux.NewRouter()
 	s := Server{
 		System: system.New(db, c, ch, r),
 		Router: r,
+		Logger: l,
 	}
+	r.Use(s.loggingMiddleware)
 	s.SetupRoutes()
 	return &s, nil
 }
@@ -35,6 +40,15 @@ func (s *Server) SetupRoutes() {
 	health.SetupRoutes(s.System)
 	queue.SetupRoutes(s.System)
 	payouts.SetupRoutes(s.System)
+}
+
+func (s *Server) loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		s.Logger.Println(r.RequestURI)
+		// Call the next handler, which can be another middleware in the chain,
+		// or the final handler.
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (s *Server) Start(done chan struct{}) {
@@ -50,11 +64,11 @@ func (s *Server) Start(done chan struct{}) {
 
 	go func() {
 		if err := srv.ListenAndServe(); err != nil {
-			log.Println(err)
+			s.Logger.Println(err)
 		}
 	}()
 
-	log.Println("Server listening on port 3000")
+	s.Logger.Println("Server listening on port 3000")
 
 	<-done
 	ctx, cancel := context.WithTimeout(context.Background(), wait)

@@ -2,8 +2,10 @@ package app
 
 import (
 	"log"
+	"math/rand"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/SIProjects/faucet-api/cache"
 	"github.com/SIProjects/faucet-api/chain"
@@ -13,6 +15,7 @@ import (
 )
 
 type App struct {
+	Logger          *log.Logger
 	DB              *database.PGDatabase
 	Cache           cache.Cache
 	Chain           *chain.Chain
@@ -21,13 +24,18 @@ type App struct {
 	done            chan struct{}
 }
 
+func init() {
+	rand.Seed(time.Now().UnixNano())
+}
+
 func New(
 	db *database.PGDatabase,
 	c cache.Cache,
 	ch *chain.Chain,
 	sch scheduler.Scheduler,
+	l *log.Logger,
 ) (*App, error) {
-	s, err := server.New(db, c, ch)
+	s, err := server.New(db, c, ch, l)
 	if err != nil {
 		return nil, err
 	}
@@ -37,6 +45,7 @@ func New(
 		Chain:           ch,
 		Server:          s,
 		PayoutScheduler: sch,
+		Logger:          l,
 	}
 	return &a, nil
 }
@@ -61,12 +70,12 @@ func (a *App) Start() {
 
 	done <- struct{}{}
 
-	log.Println("shutting down")
+	a.Logger.Println("shutting down")
 }
 
 func (a *App) Close() {
-	log.Println("Closing app")
+	a.Logger.Println("Closing app")
 	a.DB.Close()
 	a.Cache.Close()
-	log.Println("App closed")
+	a.Logger.Println("App closed")
 }
