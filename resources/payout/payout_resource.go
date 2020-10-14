@@ -35,3 +35,18 @@ func Recent(db database.Database) (res []model.Payout, err error) {
 
 	return res, rows.Err()
 }
+
+func Insert(payout model.Payout, db database.Database) error {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	query := `
+	INSERT INTO payload (
+		txid, address, amount, is_mined, inserted_at, updated_at
+	) FROM payout ORDER BY updated_at DESC LIMIT(50)
+	`
+
+	err := db.Exec(ctx, query)
+
+	return err
+}

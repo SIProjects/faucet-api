@@ -9,7 +9,9 @@ import (
 	"github.com/SIProjects/faucet-api/cache"
 	"github.com/SIProjects/faucet-api/chain"
 	"github.com/SIProjects/faucet-api/database"
+	"github.com/SIProjects/faucet-api/model"
 	"github.com/SIProjects/faucet-api/node"
+	"github.com/SIProjects/faucet-api/resources/payout"
 	"github.com/btcsuite/btcutil"
 )
 
@@ -73,7 +75,7 @@ func (s *LiveScheduler) CreatePayouts() {
 		})
 	}
 
-	txid, err := s.Chain.Node.PayToAddresses(payments)
+	txid, amounts, err := s.Chain.Node.PayToAddresses(payments)
 
 	if err != nil {
 		log.Println("RPC Error:", err.Error())
@@ -81,6 +83,15 @@ func (s *LiveScheduler) CreatePayouts() {
 	}
 
 	fmt.Println("Paid out:", txid)
+
+	for address, amount := range amounts {
+		p := model.Payout{
+			Amount:  amount.ToUnit(btcutil.AmountBTC),
+			Address: address.String(),
+		}
+
+		payout.Insert(p, s.DB)
+	}
 }
 
 func randomAmount() (btcutil.Amount, error) {

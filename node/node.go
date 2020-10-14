@@ -6,7 +6,7 @@ import (
 )
 
 type Node interface {
-	PayToAddresses(xs []Payment) (string, error)
+	PayToAddresses(xs []Payment) (string, map[btcutil.Address]btcutil.Amount, error)
 }
 
 type RPCNode struct {
@@ -43,7 +43,9 @@ type Payment struct {
 	Amount  btcutil.Amount
 }
 
-func (n *RPCNode) PayToAddresses(xs []Payment) (string, error) {
+func (n *RPCNode) PayToAddresses(
+	xs []Payment,
+) (string, map[btcutil.Address]btcutil.Amount, error) {
 
 	amounts := make(map[btcutil.Address]btcutil.Amount)
 
@@ -54,8 +56,8 @@ func (n *RPCNode) PayToAddresses(xs []Payment) (string, error) {
 	hash, err := n.Client.SendMany("", amounts)
 
 	if err != nil {
-		return "", err
+		return "", amounts, err
 	}
 
-	return hash.String(), nil
+	return hash.String(), amounts, nil
 }

@@ -1,6 +1,9 @@
 package testutils
 
-import "github.com/btcsuite/btcutil"
+import (
+	"github.com/SIProjects/faucet-api/node"
+	"github.com/btcsuite/btcutil"
+)
 
 type MockCache struct {
 	Pending map[string]struct{}
@@ -35,8 +38,11 @@ func NewMockCache() *MockCache {
 type MockNode struct {
 }
 
-func (n *MockNode) PayToAddress(address btcutil.Address, amount btcutil.Amount) (string, error) {
-	return "", nil
+func (n *MockNode) PayToAddresses(
+	[]node.Payment,
+) (string, map[btcutil.Address]btcutil.Amount, error) {
+	var amounts map[btcutil.Address]btcutil.Amount
+	return "", amounts, nil
 }
 
 func NewMockNode() *MockNode {
