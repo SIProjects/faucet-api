@@ -2,6 +2,7 @@ package testutils
 
 import (
 	"github.com/SIProjects/faucet-api/node"
+	"github.com/btcsuite/btcd/btcjson"
 	"github.com/btcsuite/btcutil"
 )
 
@@ -25,6 +26,10 @@ func (c *MockCache) AddAddressPayout() error {
 func (c *MockCache) Close() {
 }
 
+func (c *MockCache) GetQueuedCount() (int64, error) {
+	return 0, nil
+}
+
 func (c *MockCache) GetNextAddresses(num int) ([]btcutil.Address, error) {
 	return []btcutil.Address{}, nil
 }
@@ -43,6 +48,12 @@ func (n *MockNode) PayToAddresses(
 ) (string, map[btcutil.Address]btcutil.Amount, error) {
 	var amounts map[btcutil.Address]btcutil.Amount
 	return "", amounts, nil
+}
+
+func (n *MockNode) GetTransaction(
+	hash string,
+) (*btcjson.GetTransactionResult, error) {
+	return nil, nil
 }
 
 func NewMockNode() *MockNode {

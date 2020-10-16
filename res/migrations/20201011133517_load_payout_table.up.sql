@@ -8,6 +8,6 @@ create table payout (
   primary key (txid, address)
 );
 
-create index on payout(txid)
+create index on payout(txid);
 
-create index on payout (updated_at)
+create index on payout (inserted_at);

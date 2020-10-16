@@ -7,5 +7,6 @@ type Cache interface {
 	AddAddressToQueue(addr btcutil.Address) error
 	AddAddressPayout() error
 	GetNextAddresses(num int) ([]btcutil.Address, error)
+	GetQueuedCount() (int64, error)
 	Close()
 }

@@ -9,6 +9,11 @@ import (
 	"github.com/go-redis/redis/v8"
 )
 
+const (
+	QUEUE_KEY   = "pending:queue"
+	PENDING_KEY = "pending"
+)
+
 type RedisCache struct {
 	Name   string
 	Client *redis.Client
@@ -55,7 +60,9 @@ func (c *RedisCache) AddressKey(addr btcutil.Address) string {
 func (c *RedisCache) CanAddAddress(addr btcutil.Address) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
-	pending, err := c.Client.SIsMember(ctx, c.Key("pending"), addr.String()).Result()
+	pending, err := c.Client.SIsMember(
+		ctx, c.Key(PENDING_KEY), addr.String(),
+	).Result()
 
 	if err != nil {
 		return false, err
@@ -79,13 +86,13 @@ func (c *RedisCache) AddAddressToQueue(addr btcutil.Address) error {
 	defer cancel()
 
 	_, err := c.Client.TxPipelined(ctx, func(p redis.Pipeliner) error {
-		_, err := p.SAdd(ctx, c.Key("pending"), addr.String()).Result()
+		_, err := p.SAdd(ctx, c.Key(PENDING_KEY), addr.String()).Result()
 
 		if err != nil {
 			return err
 		}
 
-		_, err = p.RPush(ctx, c.Key("pending:queue"), addr.String()).Result()
+		_, err = p.RPush(ctx, c.Key(QUEUE_KEY), addr.String()).Result()
 
 		if err != nil {
 			return err
@@ -115,7 +122,7 @@ func (c *RedisCache) GetNextAddresses(num int) ([]btcutil.Address, error) {
 	p := c.Client
 
 	for i := 0; i < num; i++ {
-		exists, err := c.Client.Exists(ctx, c.Key("pending:queue")).Result()
+		exists, err := c.Client.Exists(ctx, c.Key(QUEUE_KEY)).Result()
 
 		if err != nil {
 			return res, err
@@ -125,7 +132,7 @@ func (c *RedisCache) GetNextAddresses(num int) ([]btcutil.Address, error) {
 			return res, nil
 		}
 
-		addrStr, err := p.LPop(ctx, c.Key("pending:queue")).Result()
+		addrStr, err := p.LPop(ctx, c.Key(QUEUE_KEY)).Result()
 
 		if err != nil {
 			return []btcutil.Address{}, err
@@ -141,7 +148,7 @@ func (c *RedisCache) GetNextAddresses(num int) ([]btcutil.Address, error) {
 			return []btcutil.Address{}, err
 		}
 
-		_, err = p.SRem(ctx, c.Key("pending"), addrStr).Result()
+		_, err = p.SRem(ctx, c.Key(PENDING_KEY), addrStr).Result()
 
 		if err != nil {
 			return []btcutil.Address{}, err
@@ -151,4 +158,10 @@ func (c *RedisCache) GetNextAddresses(num int) ([]btcutil.Address, error) {
 	}
 
 	return res, nil
+}
+
+func (c *RedisCache) GetQueuedCount() (int64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+	return c.Client.LLen(ctx, c.Key(QUEUE_KEY)).Result()
 }
