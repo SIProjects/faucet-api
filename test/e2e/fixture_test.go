@@ -34,12 +34,13 @@ func TestFixtures(t *testing.T) {
 		"health.yaml",
 		"payouts/view.yaml",
 		"queue/create.yaml",
+		"queue/create_balance_fail.yaml",
 	}
 
 	for _, name := range fixtures {
 		fx, err := loadFixture(name)
 		asserts.NoError(err)
-		sb, err := testutils.NewSandbox()
+		sb, err := testutils.NewSandbox(fx)
 		asserts.NoError(err)
 		defer sb.Close()
 

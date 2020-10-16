@@ -8,6 +8,7 @@ import (
 
 	"github.com/SIProjects/faucet-api/cache"
 	"github.com/SIProjects/faucet-api/chain"
+	"github.com/SIProjects/faucet-api/configuration"
 	"github.com/SIProjects/faucet-api/database"
 	"github.com/SIProjects/faucet-api/server/handlers/health"
 	"github.com/SIProjects/faucet-api/server/handlers/payouts"
@@ -24,10 +25,11 @@ type Server struct {
 
 func New(
 	db database.Database, c cache.Cache, ch *chain.Chain, l *log.Logger,
+	config *configuration.Config,
 ) (*Server, error) {
 	r := mux.NewRouter()
 	s := Server{
-		System: system.New(db, c, ch, r),
+		System: system.New(db, c, ch, r, config),
 		Router: r,
 		Logger: l,
 	}

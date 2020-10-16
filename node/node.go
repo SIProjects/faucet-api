@@ -10,6 +10,7 @@ import (
 type Node interface {
 	PayToAddresses(xs []Payment) (string, map[btcutil.Address]btcutil.Amount, error)
 	GetTransaction(txid string) (*btcjson.GetTransactionResult, error)
+	GetBalance() (btcutil.Amount, error)
 }
 
 type RPCNode struct {
@@ -75,4 +76,8 @@ func (n *RPCNode) GetTransaction(
 	}
 
 	return n.Client.GetTransaction(hash)
+}
+
+func (n *RPCNode) GetBalance() (btcutil.Amount, error) {
+	return n.Client.GetBalance("")
 }

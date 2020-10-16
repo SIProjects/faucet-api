@@ -9,6 +9,7 @@ import (
 	"github.com/SIProjects/faucet-api/app"
 	"github.com/SIProjects/faucet-api/cache"
 	"github.com/SIProjects/faucet-api/chain"
+	"github.com/SIProjects/faucet-api/configuration"
 	"github.com/SIProjects/faucet-api/database"
 	"github.com/SIProjects/faucet-api/node"
 	"github.com/SIProjects/faucet-api/scheduler"
@@ -65,11 +66,13 @@ func loadApp() (*app.App, error) {
 	minPayout := loadIntVar("MIN_PAYOUT", 10)
 	maxPayout := loadIntVar("MAX_PAYOUT", 100)
 
+	config := configuration.New(minPayout, maxPayout)
+
 	sch, err := scheduler.New(
-		time.Second*5, db, c, ch, logger, minPayout, maxPayout,
+		time.Second*5, db, c, ch, logger, config,
 	)
 
-	a, err := app.New(db, c, ch, sch, logger)
+	a, err := app.New(db, c, ch, sch, logger, config)
 
 	if err != nil {
 		return nil, err

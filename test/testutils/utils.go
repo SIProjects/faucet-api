@@ -10,6 +10,7 @@ import (
 	"github.com/SIProjects/faucet-api/app"
 	"github.com/SIProjects/faucet-api/chain"
 	"github.com/SIProjects/faucet-api/database"
+	"github.com/SIProjects/faucet-api/test/fixture"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -74,7 +75,7 @@ func (s *SandboxContext) Close() {
 	}
 }
 
-func NewSandbox() (*SandboxContext, error) {
+func NewSandbox(fx *fixture.Fixture) (*SandboxContext, error) {
 	os.Setenv("CWD", "../../")
 
 	conn, err := connectAdmin()
@@ -108,15 +109,16 @@ func NewSandbox() (*SandboxContext, error) {
 		return nil, err
 	}
 
-	cache := NewMockCache()
+	cache := NewMockCache(fx.Mocks.Cache)
 
-	n := NewMockNode()
+	n := NewMockNode(fx.Mocks.Node)
 
 	ch := chain.New(n, chain.Testnet)
 
 	l := log.New(os.Stdout, "", 0)
 
-	a, err := app.New(db, cache, ch, NewMockScheduler(), l)
+	config := fx.Config.ToConfig()
+	a, err := app.New(db, cache, ch, NewMockScheduler(), l, &config)
 
 	if err != nil {
 		return nil, err

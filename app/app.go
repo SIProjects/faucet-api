@@ -9,6 +9,7 @@ import (
 
 	"github.com/SIProjects/faucet-api/cache"
 	"github.com/SIProjects/faucet-api/chain"
+	"github.com/SIProjects/faucet-api/configuration"
 	"github.com/SIProjects/faucet-api/database"
 	"github.com/SIProjects/faucet-api/scheduler"
 	"github.com/SIProjects/faucet-api/server"
@@ -34,8 +35,9 @@ func New(
 	ch *chain.Chain,
 	sch scheduler.Scheduler,
 	l *log.Logger,
+	config *configuration.Config,
 ) (*App, error) {
-	s, err := server.New(db, c, ch, l)
+	s, err := server.New(db, c, ch, l, config)
 	if err != nil {
 		return nil, err
 	}

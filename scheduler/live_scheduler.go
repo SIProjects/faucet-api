@@ -8,6 +8,7 @@ import (
 
 	"github.com/SIProjects/faucet-api/cache"
 	"github.com/SIProjects/faucet-api/chain"
+	"github.com/SIProjects/faucet-api/configuration"
 	"github.com/SIProjects/faucet-api/database"
 	"github.com/SIProjects/faucet-api/model"
 	"github.com/SIProjects/faucet-api/node"
@@ -16,13 +17,12 @@ import (
 )
 
 type LiveScheduler struct {
-	Interval  time.Duration
-	Chain     *chain.Chain
-	Cache     cache.Cache
-	DB        database.Database
-	Logger    *log.Logger
-	MinPayout int
-	MaxPayout int
+	Interval time.Duration
+	Chain    *chain.Chain
+	Cache    cache.Cache
+	DB       database.Database
+	Logger   *log.Logger
+	Config   *configuration.Config
 }
 
 func New(
@@ -31,23 +31,21 @@ func New(
 	c cache.Cache,
 	ch *chain.Chain,
 	l *log.Logger,
-	min int,
-	max int,
+	config *configuration.Config,
 ) (*LiveScheduler, error) {
 
 	l.Println(
-		"Scheduler set up to payout between", min, "-", max, "every",
+		"Scheduler set up to payout between", config.MinPayout, "-", config.MaxPayout, "every",
 		interval.String(),
 	)
 
 	return &LiveScheduler{
-		Interval:  interval,
-		Chain:     ch,
-		DB:        db,
-		Cache:     c,
-		Logger:    l,
-		MinPayout: min,
-		MaxPayout: max,
+		Interval: interval,
+		Chain:    ch,
+		DB:       db,
+		Cache:    c,
+		Logger:   l,
+		Config:   config,
 	}, nil
 }
 
@@ -122,7 +120,7 @@ func (s *LiveScheduler) CreatePayouts() {
 }
 
 func (s *LiveScheduler) randomAmount() (btcutil.Amount, error) {
-	val := rand.Intn(s.MaxPayout-s.MinPayout) + s.MinPayout
+	val := rand.Intn(s.Config.MaxPayout-s.Config.MinPayout) + s.Config.MinPayout
 	return btcutil.NewAmount(float64(val))
 }
 

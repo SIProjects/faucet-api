@@ -1,11 +1,11 @@
-name: Add to queue
-description: Adding an address to the queue
+name: Add to queue balance fail
+description: Adding an address to the queue with not enough balance
 config:
   min_payout: 10
   max_payout: 100
 mocks:
   node:
-    get_balance: 1000
+    get_balance: 99
   cache:
     get_queued_count: 1
 request:
@@ -19,7 +19,7 @@ request:
       "address": "TAhMsSxfyQAxGGMUTb7YyRk2uFruyZSZ6a"
     }
 response:
-  status: 201
+  status: 500
 cache:
-  pending:
-    - TAhMsSxfyQAxGGMUTb7YyRk2uFruyZSZ6a
+  pending: []
+
