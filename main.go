@@ -69,7 +69,7 @@ func loadApp() (*app.App, error) {
 	config := configuration.New(minPayout, maxPayout)
 
 	sch, err := scheduler.New(
-		time.Second*5, db, c, ch, logger, config,
+		time.Second*30, db, c, ch, logger, config,
 	)
 
 	a, err := app.New(db, c, ch, sch, logger, config)
