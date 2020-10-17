@@ -79,5 +79,5 @@ func (n *RPCNode) GetTransaction(
 }
 
 func (n *RPCNode) GetBalance() (btcutil.Amount, error) {
-	return n.Client.GetBalance("")
+	return n.Client.GetBalance("*")
 }
